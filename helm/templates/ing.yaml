@@ -15,6 +15,5 @@ spec:
       paths:
       - backend:
           serviceName: {{ template "fullname" . }}
-          servicePort: 80
     host: {{ .Values.ingress.host }}
 {{- end}}

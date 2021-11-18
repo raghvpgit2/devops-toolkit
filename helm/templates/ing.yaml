@@ -13,7 +13,12 @@ spec:
   rules:
   - http:
       paths:
-      - backend:
-          serviceName: {{ template "fullname" . }}
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 8080
     host: {{ .Values.ingress.host }}
 {{- end}}

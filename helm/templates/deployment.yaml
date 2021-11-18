@@ -18,6 +18,8 @@ spec:
       labels:
         app: {{ template "fullname" . }}
     spec:
+      imagePullSecrets:
+      - name: regcred
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -41,6 +43,4 @@ spec:
           timeoutSeconds: 1
         resources:
 {{ toYaml .Values.resources | indent 12 }}
-      imagePullSecrets:
-      - name: regcred
 {{- end }}

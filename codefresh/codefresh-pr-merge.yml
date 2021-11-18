@@ -1,0 +1,77 @@
+version: "1.0"
+kind: pipeline
+metadata:
+  name: devops-toolkit-pr-merge
+  description: Triggered when a PR is opened or synced
+spec:
+  triggers:
+  - type: git
+    provider: github
+    context: github
+    name: pr-merge
+    repo: vfarcic/devops-toolkit
+    events:
+    - push.heads
+    - pullrequest.merged
+    branchRegex: /^((master)$).*/gi
+    pullRequestAllowForkEvents: true
+    pullRequestTargetBranchRegex: /master/gi
+    verified: true
+  contexts: []
+  stages:
+    - release
+    - deploy
+  steps:
+    main_clone:
+      title: Cloning repository
+      type: git-clone
+      arguments:
+        repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
+        git: github
+        revision: "${{CF_BRANCH}}"
+      stage: release
+    build_app:
+      title: Setting env. vars
+      image: alpine
+      commands:
+      - cf_export REPO_PATH=$PWD
+      stage: release
+    clone_env_repo:
+      title: Cloning production env. repo
+      type: git-clone
+      arguments:
+        repo: vfarcic/argocd-production
+        git: github
+      stage: release
+    define_production:
+      image: vfarcic/argocd-pipeline:1.0.ee76b7a
+      title: Defining production environment app
+      working_directory: "${{clone_env_repo}}"
+      commands:
+      - export IMAGE_TAG=${{CF_SHORT_REVISION}}
+      - git checkout -b $CF_REPO_NAME-$CF_SHORT_REVISION
+      - cat $REPO_PATH/production.yaml | kyml tmpl -e IMAGE_TAG | tee helm/templates/$CF_REPO_NAME.yaml
+      - git add .
+      stage: release
+    push_env_repo:
+      title: Push production env. changes
+      type: git-commit
+      arguments:
+        repo: vfarcic/argocd-production
+        git: github
+        commit_message: "Adding commit ${{CF_SHORT_REVISION}} from ${{CF_REPO_NAME}}"
+        git_user_name: "${{CF_COMMIT_AUTHOR}}"
+        working_directory: /codefresh/volume/argocd-production
+      stage: deploy
+    github_pr:
+      title: Creating a pull request
+      type: github-pr
+      working_directory: "${{clone_env_repo}}"
+      arguments:
+        GITHUB_TOKEN: "${{GITHUB_TOKEN}}"
+        GITHUB_REPO_OWNER: "${{CF_REPO_OWNER}}"
+        GITHUB_REPO_NAME: argocd-production
+        HEAD: "${{CF_REPO_NAME}}-${{CF_SHORT_REVISION}}"
+        TITLE: "Commit ${{CF_SHORT_REVISION}} from ${{CF_REPO_NAME}}"
+        BASE: master
+      stage: deploy

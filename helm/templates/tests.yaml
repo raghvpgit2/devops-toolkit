@@ -15,5 +15,5 @@ spec:
         - /bin/bash
         - -ec
         - |
-                    bash -c min=$(date +"%M");rem=$(( min % 2 ));echo $( date );if [ "$rem" == "1" ]; then echo "Some Tests have failed...";exit 1; else echo "All tests have passed..."; fi
+                    bash -c echo "Some tests failed...";exit 1
   restartPolicy: Never

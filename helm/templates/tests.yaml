@@ -15,5 +15,5 @@ spec:
         - /bin/bash
         - -ec
         - |
-                    echo "Tests are successful!"
+                    echo "Tests have failed!";exit 1
   restartPolicy: Never

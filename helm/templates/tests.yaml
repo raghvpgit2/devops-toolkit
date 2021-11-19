@@ -5,6 +5,8 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  imagePullSecrets:
+  - name: regcred
   containers:
     - name: hackathon-test
       image: python:3.7-slim-buster

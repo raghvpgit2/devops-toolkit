@@ -3,8 +3,7 @@ kind: Pod
 metadata:
   name: "hackathon-test"
   annotations:
-    "helm.sh/hook": test-success
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook": test
 spec:
   containers:
     - name: hackathon-test
